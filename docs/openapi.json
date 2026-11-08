@@ -3,7 +3,7 @@
   "info": {
     "title": "Tradutor de pranchas estruturais",
     "description": "Lê pranchas de cálculo estrutural (PDF do CAD ou imagem) e devolve os dados estruturados e o modelo 3D do esqueleto estrutural. Contrato de saída versão 1.0.",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "paths": {
     "/v1/saude": {
@@ -312,6 +312,61 @@
               "title": "Ids"
             },
             "description": "ids das traduções do mesmo projeto, separados por vírgula (até 30)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projetos/materiais": {
+      "get": {
+        "tags": [
+          "projeto"
+        ],
+        "summary": "Materiais",
+        "description": "Os materiais que o projeto pede (aço por bitola da NBR 7480, concreto por classe, forma, enchimento),\ncada um com o insumo do SINAPI que é o mesmo produto e o preço de referência na UF. Não guarda nada.",
+        "operationId": "materiais_v1_projetos_materiais_get",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ids das traduções do projeto, separados por vírgula",
+              "title": "Ids"
+            },
+            "description": "ids das traduções do projeto, separados por vírgula"
+          },
+          {
+            "name": "uf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "UF da obra, para o preço de referência do SINAPI",
+              "default": "SP",
+              "title": "Uf"
+            },
+            "description": "UF da obra, para o preço de referência do SINAPI"
           }
         ],
         "responses": {

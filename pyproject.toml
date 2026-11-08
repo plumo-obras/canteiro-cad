@@ -1,6 +1,6 @@
 [project]
 name = "canteiro-cad"
-version = "1.1.0"
+version = "1.2.0"
 description = "Tradutor de pranchas estruturais do Plumo: lê o projeto estrutural (PDF do CAD ou imagem) e devolve os dados, o pacote do projeto e o modelo 3D."
 requires-python = ">=3.11,<3.13"
 # O motor de leitura vai travado na versão exata: OCR, rasterização do PDF e visão computacional mudam o resultado
@@ -25,6 +25,7 @@ dev = ["pytest>=8", "pytest-asyncio>=1.2", "ruff>=0.14", "jsonschema>=4.23"]
 
 [project.scripts]
 identificar-pranchas = "canteiro_cad.interfaces.cli.identificar:main"
+atualizar-sinapi = "canteiro_cad.interfaces.cli.atualizar_sinapi:main"
 
 [build-system]
 requires = ["hatchling"]

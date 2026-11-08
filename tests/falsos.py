@@ -91,3 +91,32 @@ LOCACAO = {
         "caixa": [-40, -40, 40, 40],
     },
 }
+
+
+class CatalogoFalso:
+    """Acha só o aço CA-50 Ø 10,0; o resto fica sem código, como no SINAPI de verdade para bloco e vigota."""
+
+    def __init__(self, carregado: bool = True) -> None:
+        self.carregado = carregado
+
+    def referencia(self):
+        return {"fonte": "SINAPI", "mes": "2026-09", "encargos": "sem desoneração"} if self.carregado else None
+
+    def correspondente(self, material, uf):
+        from canteiro_cad.aplicacao.portas import InsumoDeReferencia
+
+        if material.chave == "aco:CA50:10.0":
+            return InsumoDeReferencia("34", "ACO CA-50, 10,0 MM, VERGALHAO", "KG", 669 if uf == "SP" else None)
+        return None
+
+
+# uma folha de detalhamento: quadro de aço e totais (o que a lista de materiais lê)
+DETALHAMENTO = {
+    "fonte": "pdf-vetorial",
+    "carimbo": {"cliente": "Cliente Inventado", "folha": "02"},
+    "classificacao": {"tipo": "Detalhamento", "pavimento": None, "conteudos": []},
+    "desenhos": [],
+    "detalhamentos": {},
+    "tabelas_aco": [{"grupo": "Vigas", "linhas": [{"aco": "CA50", "diam_mm": 10.0, "c_total_cm": 10000}]}],
+    "totais": {"concreto_m3": {"C-30": 2.5}, "forma_m2": 12.0},
+}

@@ -97,6 +97,15 @@ modelo e volta ao 3D com ela.
 Compilar: `canteiro-web/scripts/cadcraft.sh` (precisa de Rust com o alvo `wasm32-unknown-unknown` e `trunk`); clona a
 v0.18.0, aplica o patch, compila e copia para `public/cadcraft/` (fora do git, com as licenças do CADCraft).
 
+## Materiais do projeto (SINAPI)
+
+`GET /v1/projetos/materiais?ids=a,b,c&uf=SP` → `{referencia: {fonte, mes, encargos, uf} | null, itens: [...],
+total_referencia_centavos, avisos, em_andamento, nao_encontradas}`. Cada item: `chave` (estável: `aco:CA50:10.0`,
+`concreto:C30`, `forma:chapa`, `enchimento:<nome>`, `vigota:planta`), `categoria`, `especificacao`, `unidade`,
+`quantidade`, `origem` (folhas), `ajuste` (correção do que veio do CAD), `nota` (o que quem compra precisa saber) e
+`referencia` (`{codigo, descricao, unidade, preco_centavos, total_centavos}` do SINAPI, ou `null`). Item com
+`quantidade` 0 (vigotas) é para confirmar com o fornecedor, não para comprar como está.
+
 ## Contrato do modelo 3D (`docs/modelo3d.schema.json`)
 
 ```jsonc

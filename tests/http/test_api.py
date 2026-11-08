@@ -6,7 +6,15 @@ from fastapi.testclient import TestClient
 from canteiro_cad.aplicacao.casos_de_uso import Tradutor
 from canteiro_cad.interfaces.http.app import criar_app
 from canteiro_cad.interfaces.http.configuracao import Configuracao
-from tests.falsos import LOCACAO, EspelhoFalso, LeitorFalso, NotificadorFalso, RepositorioEmMemoria
+from tests.falsos import (
+    DETALHAMENTO,
+    LOCACAO,
+    CatalogoFalso,
+    EspelhoFalso,
+    LeitorFalso,
+    NotificadorFalso,
+    RepositorioEmMemoria,
+)
 
 
 @pytest.fixture
@@ -14,9 +22,10 @@ def cli(tmp_path):
     repo = RepositorioEmMemoria()
     tr = Tradutor(
         repo,
-        LeitorFalso(repo, {"1.pdf": LOCACAO}),
+        LeitorFalso(repo, {"1.pdf": LOCACAO, "det.pdf": DETALHAMENTO}),
         NotificadorFalso(),
         EspelhoFalso(),
+        CatalogoFalso(),
         max_bytes=1024,
         retencao_horas=72,
     )
@@ -76,3 +85,13 @@ def test_erros_do_dominio_viram_codigos(cli):
     assert cli.get("/v1/projetos/espelho.dxf?ids=naoexiste").status_code == 409
     sem_locacao = enviar(cli, "2.pdf").json()["id"]
     assert cli.get(f"/v1/traducoes/{sem_locacao}/modelo3d").status_code == 404
+
+
+def test_materiais_do_projeto(cli):
+    tid = enviar(cli, "det.pdf").json()["id"]
+    r = cli.get(f"/v1/projetos/materiais?ids={tid}&uf=SP")
+    assert r.status_code == 200
+    aco = next(i for i in r.json()["itens"] if i["chave"] == "aco:CA50:10.0")
+    assert aco["referencia"]["codigo"] == "34"
+    assert cli.get(f"/v1/projetos/materiais?ids={tid}&uf=XX").status_code == 422
+    assert cli.get(f"/v1/projetos/materiais?ids={tid}", headers={"X-API-Key": "errada"}).status_code == 401

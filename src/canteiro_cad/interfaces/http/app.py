@@ -33,6 +33,8 @@ from canteiro_cad.dominio.erros import (
 )
 from canteiro_cad.dominio.traducao import Status, Traducao
 from canteiro_cad.dominio.versao import VERSAO_CONTRATO, VERSAO_SERVICO
+from canteiro_cad.infraestrutura import baixar_sinapi
+from canteiro_cad.infraestrutura.catalogo_sinapi import CatalogoSinapi
 from canteiro_cad.infraestrutura.dxf import EspelhoDxf
 from canteiro_cad.infraestrutura.leitor import LeitorEmProcessos
 from canteiro_cad.infraestrutura.notificador_http import NotificadorHttp
@@ -73,6 +75,15 @@ def _ids(ids: str) -> list[str]:
     return [i.strip() for i in ids.split(",") if i.strip()]
 
 
+def _baixar_sinapi_sem_derrubar(cfg: Configuracao) -> None:
+    print("SINAPI: sem catálogo; baixando o mês mais novo da Caixa…", flush=True)
+    try:
+        destino = baixar_sinapi.baixar(cfg.dados / "catalogo", timeout=60)
+        print(f"SINAPI: catálogo gravado em {destino}", flush=True)
+    except Exception as e:  # noqa: BLE001 — sem internet ou Caixa fora do ar: o serviço segue, sem preço de referência
+        print(f"SINAPI não baixado: {e}", flush=True)
+
+
 def montar_tradutor(cfg: Configuracao) -> tuple[Tradutor, LeitorEmProcessos]:
     """Liga os casos de uso aos adaptadores de verdade (disco, processos, DXF, callback HTTP)."""
     repo = RepositorioEmDisco(cfg.dados)
@@ -82,6 +93,7 @@ def montar_tradutor(cfg: Configuracao) -> tuple[Tradutor, LeitorEmProcessos]:
         leitor,
         NotificadorHttp(cfg.segredo_webhook),
         EspelhoDxf(),
+        CatalogoSinapi(cfg.dados / "catalogo"),
         max_bytes=cfg.max_bytes,
         retencao_horas=cfg.retencao_horas,
     )
@@ -102,10 +114,16 @@ def criar_app(cfg: Configuracao | None = None, tradutor: Tradutor | None = None)
                 await asyncio.sleep(3600)
 
         limpeza = asyncio.create_task(limpar_de_hora_em_hora())
+        sinapi = None
+        if cfg.sinapi_auto and tradutor.catalogo is not None and tradutor.catalogo.referencia() is None:
+            # sem catálogo, a lista de materiais sai sem código nem preço: baixa em segundo plano, sem segurar a subida
+            sinapi = asyncio.create_task(asyncio.to_thread(_baixar_sinapi_sem_derrubar, cfg))
         try:
             yield
         finally:
             limpeza.cancel()
+            if sinapi is not None:
+                sinapi.cancel()
             if leitor is not None:
                 leitor.encerrar()
 
@@ -190,6 +208,15 @@ def criar_app(cfg: Configuracao | None = None, tradutor: Tradutor | None = None)
         """Junta as folhas de um projeto: checklist do pacote (o que cada parte alimenta, quem cobriu, o que falta),
         conferências entre folhas, quantitativos somados e o modelo 3D enriquecido. Não guarda nada."""
         return tradutor.projeto(_ids(ids))
+
+    @app.get("/v1/projetos/materiais", tags=["projeto"], dependencies=protegido)
+    def materiais(
+        ids: str = Query(..., description="ids das traduções do projeto, separados por vírgula"),
+        uf: str = Query("SP", description="UF da obra, para o preço de referência do SINAPI"),
+    ):
+        """Os materiais que o projeto pede (aço por bitola da NBR 7480, concreto por classe, forma, enchimento),
+        cada um com o insumo do SINAPI que é o mesmo produto e o preço de referência na UF. Não guarda nada."""
+        return tradutor.materiais(_ids(ids), uf)
 
     @app.get("/v1/projetos/espelho.dxf", tags=["projeto"], dependencies=protegido)
     def espelho_dxf(

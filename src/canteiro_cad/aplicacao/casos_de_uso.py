@@ -9,7 +9,7 @@ import unicodedata
 import uuid
 from collections.abc import Callable
 
-from canteiro_cad.dominio import contrato, pacote
+from canteiro_cad.dominio import contrato, materiais, pacote
 from canteiro_cad.dominio.erros import (
     PedidoInvalido,
     ProjetoSemModelo,
@@ -18,9 +18,10 @@ from canteiro_cad.dominio.erros import (
 )
 from canteiro_cad.dominio.traducao import Status, Traducao, extensao_aceita, id_valido
 
-from .portas import EspelhoCad, LeitorDePranchas, Notificador, RepositorioDeTraducoes
+from .portas import CatalogoDeInsumos, EspelhoCad, LeitorDePranchas, Notificador, RepositorioDeTraducoes
 
 MAX_IDS_POR_PROJETO = 30
+UFS = frozenset("AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split())
 
 
 class Tradutor:
@@ -30,6 +31,7 @@ class Tradutor:
         leitor: LeitorDePranchas,
         notificador: Notificador,
         espelho: EspelhoCad,
+        catalogo: CatalogoDeInsumos | None = None,
         *,
         max_bytes: int,
         retencao_horas: float,
@@ -37,6 +39,7 @@ class Tradutor:
         novo_id: Callable[[], str] = lambda: uuid.uuid4().hex,
     ):
         self.repo, self.leitor, self.notificador, self.espelho_cad = repositorio, leitor, notificador, espelho
+        self.catalogo = catalogo
         self.max_bytes, self.retencao_horas = max_bytes, retencao_horas
         self.agora, self.novo_id = relogio, novo_id
         self._em_curso: set[asyncio.Task] = set()  # referência forte: tarefa solta pode ser coletada no meio
@@ -119,9 +122,7 @@ class Tradutor:
 
     # ------------------------------------------------------------------ o projeto (várias pranchas)
 
-    def projeto(self, ids: list[str]) -> dict:
-        """Junta as folhas de um projeto: o pacote (o que cada parte alimenta, quem cobriu, o que falta), as
-        conferências entre folhas, os quantitativos e o modelo 3D enriquecido. Não guarda nada."""
+    def _folhas(self, ids: list[str]) -> tuple[list[tuple[str, dict]], list[dict], list[str]]:
         if not ids or len(ids) > MAX_IDS_POR_PROJETO or len(set(ids)) != len(ids):
             raise PedidoInvalido(f"Envie de 1 a {MAX_IDS_POR_PROJETO} ids diferentes, separados por vírgula.")
         folhas, andamento, sumidas = [], [], []
@@ -135,6 +136,12 @@ class Tradutor:
                 folhas.append((tid, self.repo.resultado(tid)))
             else:
                 andamento.append({"id": tid, "status": str(t.status), "nome": t.nome, "erro": t.erro})
+        return folhas, andamento, sumidas
+
+    def projeto(self, ids: list[str]) -> dict:
+        """Junta as folhas de um projeto: o pacote (o que cada parte alimenta, quem cobriu, o que falta), as
+        conferências entre folhas, os quantitativos e o modelo 3D enriquecido. Não guarda nada."""
+        folhas, andamento, sumidas = self._folhas(ids)
         out = pacote.combinar(folhas)
         out["em_andamento"] = andamento
         out["nao_encontradas"] = sumidas
@@ -150,6 +157,34 @@ class Tradutor:
         # o nome vai num cabeçalho HTTP, que só leva ASCII: o "É" de um nome quebrava o download
         ascii_ = unicodedata.normalize("NFKD", cliente).encode("ascii", "ignore").decode()
         return corpo, "espelho-" + ("".join(c for c in ascii_ if c.isalnum())[:30] or "projeto") + ".dxf"
+
+    def materiais(self, ids: list[str], uf: str) -> dict:
+        """O que o projeto pede para a estrutura sair do papel, cada material com o insumo que existe no mercado
+        (SINAPI) e o preço de referência na UF da obra. É o "precisa" da conta de compras, não a lista do que falta."""
+        uf = (uf or "").upper()
+        if uf not in UFS:
+            raise PedidoInvalido("Informe a UF da obra com duas letras (SP, MG...).")
+        folhas, andamento, sumidas = self._folhas(ids)
+        lista, avisos = materiais.levantar(folhas)
+        referencia = self.catalogo.referencia() if self.catalogo else None
+        if referencia is None:
+            avisos.append(
+                "Sem o catálogo do SINAPI neste serviço: os materiais saem sem código e sem preço de referência"
+            )
+        itens, total = [], 0
+        for m in lista:
+            r = self.catalogo.correspondente(m, uf) if self.catalogo and referencia else None
+            item = m.para_dict()
+            item["referencia"] = None
+            if r:
+                valor = round(r.preco_centavos * m.quantidade) if r.preco_centavos is not None else None
+                item["referencia"] = {"codigo": r.codigo, "descricao": r.descricao, "unidade": r.unidade,
+                                      "preco_centavos": r.preco_centavos, "total_centavos": valor}  # fmt: skip
+                total += valor or 0
+            itens.append(item)
+        return {"referencia": {**referencia, "uf": uf} if referencia else None, "itens": itens,
+                "total_referencia_centavos": total, "avisos": avisos, "em_andamento": andamento,
+                "nao_encontradas": sumidas}  # fmt: skip
 
     # ------------------------------------------------------------------ manutenção
 

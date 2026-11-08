@@ -33,7 +33,27 @@ chave (`TRADUTOR_CHAVE` lá = uma das `TRADUTOR_API_KEYS` aqui). O serviço não
 | `TRADUTOR_RETENCAO_HORAS` | 72 | depois disso a tradução é apagada |
 | `TRADUTOR_CORS` | `*` | origens liberadas |
 | `TRADUTOR_WEBHOOK_SEGREDO` | vazio | assina o callback (`X-Tradutor-Assinatura: sha256=…`) |
-| `TRADUTOR_DADOS` | `/dados` na imagem | onde ficam pranchas e resultados (volume) |
+| `TRADUTOR_DADOS` | `/dados` na imagem | onde ficam pranchas, resultados e o catálogo do SINAPI (volume) |
+| `TRADUTOR_SINAPI_AUTO` | 1 | sem catálogo do SINAPI, baixa o mês mais novo da Caixa ao subir |
+
+## Materiais do projeto e o SINAPI
+
+`GET /v1/projetos/materiais?ids=...&uf=SP` devolve o que o projeto pede para a estrutura sair do papel: o aço por
+categoria e bitola (a bitola do CAD vai para a fabricada da NBR 7480; um Ø digitado errado vira a real mais próxima,
+com o ajuste anotado), o concreto por classe, a área de forma, os blocos de enchimento e as vigotas. Cada material vem
+com o insumo do **SINAPI** que é o mesmo produto (código, descrição, unidade) e o preço de referência na UF, em
+centavos. O que o SINAPI não vende avulso (bloco de EPS de laje, vigota) fica sem código, e a lista diz isso.
+
+É o "precisa" da conta de compras: o que falta comprar é a API do Plumo que calcula (precisa − saldo − a caminho).
+
+O catálogo é o arquivo mensal da Caixa (`SINAPI-AAAA-MM-formato-xlsx.zip`, aba ISD). O serviço baixa sozinho ao subir
+quando não há catálogo; para trocar o mês:
+
+```bash
+uv run atualizar-sinapi                      # o mês mais novo publicado
+uv run atualizar-sinapi --mes 2026-09        # um mês específico
+uv run atualizar-sinapi --arquivo SINAPI.zip # sem internet: o ZIP já baixado
+```
 
 ## Arquitetura
 
@@ -47,6 +67,7 @@ src/canteiro_cad/
     pacote.py         o pacote do projeto: o que cada folha cobre, o que falta, conferências entre folhas, quantitativos
     contrato.py       o resultado e o modelo 3D no contrato 1.0 (o que o Plumo consome)
     espelho.py        o espelho no CAD: camada de cada elemento, onde vai o id, o que mudou na volta
+    materiais.py      o levantamento: aço por bitola da NBR 7480, concreto por classe, forma, enchimento
     erros.py          erros com a mensagem para quem usa; a interface escolhe o código
   aplicacao/
     portas.py         o que os casos de uso pedem de fora: repositório, leitor, notificador, espelho
@@ -55,6 +76,7 @@ src/canteiro_cad/
     motor/            a leitura da prancha: PDF pelas camadas do CAD (exato) ou imagem pelo OCR
     leitor.py         o motor em processos separados
     repositorio_disco.py · dxf.py (ezdxf) · notificador_http.py · excel.py
+    catalogo_sinapi.py · baixar_sinapi.py   o SINAPI da Caixa e as regras de correspondência
   interfaces/
     http/             FastAPI: rotas, autenticação, erro do domínio → código HTTP, configuração
     cli/              identificar (ler pranchas sem o serviço) e gerar_dataset

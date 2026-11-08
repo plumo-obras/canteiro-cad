@@ -22,7 +22,11 @@ def cli(tmp_path_factory):
     from canteiro_cad.interfaces.http.configuracao import Configuracao
 
     cfg = Configuracao.do_ambiente(
-        {"TRADUTOR_DADOS": str(tmp_path_factory.mktemp("dados")), "TRADUTOR_API_KEYS": "chave-teste"}
+        {
+            "TRADUTOR_DADOS": str(tmp_path_factory.mktemp("dados")),
+            "TRADUTOR_API_KEYS": "chave-teste",
+            "TRADUTOR_SINAPI_AUTO": "0",
+        }
     )
     with TestClient(criar_app(cfg)) as c:
         c.headers["X-API-Key"] = "chave-teste"

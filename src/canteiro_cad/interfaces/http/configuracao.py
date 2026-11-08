@@ -29,6 +29,7 @@ class Configuracao:
     retencao_horas: float
     cors: list[str]
     segredo_webhook: bytes
+    sinapi_auto: bool = True
 
     @classmethod
     def do_ambiente(cls, env: dict[str, str] | None = None) -> Configuracao:
@@ -41,4 +42,5 @@ class Configuracao:
             retencao_horas=float(e.get("TRADUTOR_RETENCAO_HORAS", "72")),
             cors=_lista(e.get("TRADUTOR_CORS", "*")),
             segredo_webhook=e.get("TRADUTOR_WEBHOOK_SEGREDO", "").encode(),
+            sinapi_auto=e.get("TRADUTOR_SINAPI_AUTO", "1") != "0",
         )

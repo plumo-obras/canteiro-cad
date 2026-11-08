@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Protocol
 
+from canteiro_cad.dominio.materiais import Material
 from canteiro_cad.dominio.traducao import Traducao
 
 
@@ -53,4 +54,24 @@ class Notificador(Protocol):
 class EspelhoCad(Protocol):
     def exportar(self, modelo: dict, obra: dict | None, ids_base: list[str]) -> bytes:
         """O modelo em planta no formato que o CAD abre (DXF)."""
+        ...
+
+
+@dataclass(frozen=True)
+class InsumoDeReferencia:
+    """O insumo que existe no mercado (SINAPI) para um material do projeto, com o preço de referência na UF."""
+
+    codigo: str
+    descricao: str
+    unidade: str
+    preco_centavos: int | None  # None: o SINAPI não coletou preço nesta UF no mês
+
+
+class CatalogoDeInsumos(Protocol):
+    def referencia(self) -> dict | None:
+        """De onde vêm os preços: {"fonte": "SINAPI", "mes": "AAAA-MM", ...}; None se não há catálogo carregado."""
+        ...
+
+    def correspondente(self, material: Material, uf: str) -> InsumoDeReferencia | None:
+        """O insumo de catálogo para o material, ou None se não há um que seja de fato o mesmo produto."""
         ...
