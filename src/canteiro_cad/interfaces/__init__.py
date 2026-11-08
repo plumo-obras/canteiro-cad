@@ -1,0 +1,1 @@
+"""Quem chama o tradutor."""

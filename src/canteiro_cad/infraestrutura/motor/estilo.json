@@ -1,0 +1,27 @@
+{
+  "altura_px_por_camada": {
+    "DT-Cotas": 22.6,
+    "DT-Relação do aço": 22.6,
+    "DT-Textos": 22.6,
+    "DT-Título": 56.6,
+    "Descrição da armadura": 22.6,
+    "FO-Cortes": 37.8,
+    "FO-Cotas": 22.6,
+    "FO-Indicações": 26.4,
+    "FO-Textos das lajes": 22.6,
+    "FO-Textos das vigas": 22.6,
+    "FO-Textos dos pilares": 22.6,
+    "FO-Títulos": 33.9,
+    "LC-Cotas": 22.6,
+    "LC-Textos": 22.6,
+    "Textos armaduras": 22.6
+  },
+  "eixo_rotulo_altura_px": 45.3,
+  "eixo_coord_altura_px": 52.8,
+  "pilar_modelo": "estilo_pilar.png",
+  "fonte": [
+    "1.pdf",
+    "2.pdf",
+    "3.pdf"
+  ]
+}

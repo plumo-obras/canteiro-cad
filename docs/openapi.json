@@ -1,0 +1,467 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tradutor de pranchas estruturais",
+    "description": "Lê pranchas de cálculo estrutural (PDF do CAD ou imagem) e devolve os dados estruturados e o modelo 3D do esqueleto estrutural. Contrato de saída versão 1.0.",
+    "version": "1.1.0"
+  },
+  "paths": {
+    "/v1/saude": {
+      "get": {
+        "tags": [
+          "serviço"
+        ],
+        "summary": "Saude",
+        "operationId": "saude_v1_saude_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Saude V1 Saude Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/traducoes": {
+      "post": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Criar",
+        "operationId": "criar_v1_traducoes_post",
+        "parameters": [
+          {
+            "name": "aguardar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 120,
+              "minimum": 0,
+              "description": "Segundos para esperar e já devolver o resultado",
+              "default": 0,
+              "title": "Aguardar"
+            },
+            "description": "Segundos para esperar e já devolver o resultado"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_criar_v1_traducoes_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/traducoes/{tid}": {
+      "get": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Status",
+        "operationId": "status_v1_traducoes__tid__get",
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Status V1 Traducoes  Tid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Apagar",
+        "operationId": "apagar_v1_traducoes__tid__delete",
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/traducoes/{tid}/resultado": {
+      "get": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Resultado",
+        "operationId": "resultado_v1_traducoes__tid__resultado_get",
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tid"
+            }
+          },
+          {
+            "name": "incluir_rastreio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Inclui para onde foi cada texto",
+              "default": false,
+              "title": "Incluir Rastreio"
+            },
+            "description": "Inclui para onde foi cada texto"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/traducoes/{tid}/modelo3d": {
+      "get": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Modelo3D",
+        "operationId": "modelo3d_v1_traducoes__tid__modelo3d_get",
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/traducoes/{tid}/excel": {
+      "get": {
+        "tags": [
+          "traduções"
+        ],
+        "summary": "Excel",
+        "operationId": "excel_v1_traducoes__tid__excel_get",
+        "parameters": [
+          {
+            "name": "tid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projetos": {
+      "get": {
+        "tags": [
+          "projeto"
+        ],
+        "summary": "Projeto",
+        "description": "Junta as folhas de um projeto: checklist do pacote (o que cada parte alimenta, quem cobriu, o que falta),\nconferências entre folhas, quantitativos somados e o modelo 3D enriquecido. Não guarda nada.",
+        "operationId": "projeto_v1_projetos_get",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ids das traduções do mesmo projeto, separados por vírgula (até 30)",
+              "title": "Ids"
+            },
+            "description": "ids das traduções do mesmo projeto, separados por vírgula (até 30)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projetos/espelho.dxf": {
+      "get": {
+        "tags": [
+          "projeto"
+        ],
+        "summary": "Espelho Dxf",
+        "description": "O modelo do pacote em DXF para editar no CAD (CADCraft, AutoCAD...). Se o pacote já tem uma edição do CAD,\no espelho sai com ela aplicada: dá para editar, subir, baixar de novo e continuar.",
+        "operationId": "espelho_dxf_v1_projetos_espelho_dxf_get",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ids das traduções do projeto, separados por vírgula",
+              "title": "Ids"
+            },
+            "description": "ids das traduções do projeto, separados por vírgula"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_criar_v1_traducoes_post": {
+        "properties": {
+          "arquivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Arquivo",
+            "description": "PDF do CAD, PNG ou JPG da prancha, ou o DXF do espelho"
+          },
+          "callback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Callback Url",
+            "description": "URL que recebe um POST quando terminar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "arquivo"
+        ],
+        "title": "Body_criar_v1_traducoes_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

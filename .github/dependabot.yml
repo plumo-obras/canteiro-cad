@@ -1,0 +1,28 @@
+# Atualizações semanais do que fica travado: actions (por SHA), a imagem base e as dependências do Python.
+# Menor e patch num PR só por ecossistema; major vem sozinho, porque é o que quebra.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-menor-e-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      imagens-menor-e-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: pip
+    # requirements-servico.txt: o motor (OCR, PDF, DXF) e o serviço
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python-menor-e-patch:
+        update-types: [minor, patch]

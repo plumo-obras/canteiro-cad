@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prumo/tradutor/modelo3d/1.0",
+  "title": "Modelo 3D do esqueleto estrutural (contrato 1.0)",
+  "type": "object",
+  "required": ["versao_contrato", "id", "sistema_coordenadas", "niveis", "limites", "elementos", "resumo", "avisos"],
+  "properties": {
+    "versao_contrato": {"const": "1.0"},
+    "id": {"type": "string", "description": "id da tradução"},
+    "sistema_coordenadas": {
+      "type": "object",
+      "properties": {"unidade": {"const": "cm"}, "x": {"type": "string"}, "y": {"type": "string"}, "z": {"type": "string"}, "origem": {"type": "string"}}
+    },
+    "niveis": {"type": "array", "items": {"type": "object", "required": ["cota_cm"],
+      "properties": {"cota_cm": {"type": "number"}, "nome": {"type": ["string", "null"]}}}},
+    "limites": {"type": "object", "required": ["x0", "y0", "x1", "y1", "z0", "z1"],
+      "properties": {"x0": {"type": "number"}, "y0": {"type": "number"}, "x1": {"type": "number"}, "y1": {"type": "number"}, "z0": {"type": "number"}, "z1": {"type": "number"}}},
+    "elementos": {"type": "array", "items": {"$ref": "#/$defs/elemento"}},
+    "resumo": {"type": "object", "additionalProperties": {"type": "integer"}},
+    "calibracao_formas": {"type": "array", "items": {"type": "object"}},
+    "avisos": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "elemento": {
+      "type": "object",
+      "required": ["id", "tipo", "geometria", "propriedades"],
+      "properties": {
+        "id": {"type": "string", "description": "P1, S-P1, V-310-001, L1..."},
+        "tipo": {"enum": ["pilar", "sapata", "viga", "laje"]},
+        "geometria": {"oneOf": [{"$ref": "#/$defs/caixa"}, {"$ref": "#/$defs/prisma"}]},
+        "propriedades": {"type": "object"}
+      }
+    },
+    "caixa": {
+      "type": "object", "required": ["forma", "centro", "dimensoes", "z0", "z1"],
+      "description": "Paralelepípedo alinhado aos eixos: centro em planta (x, y), dimensões (dx, dy), de z0 a z1.",
+      "properties": {"forma": {"const": "caixa"},
+        "centro": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "dimensoes": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "z0": {"type": "number"}, "z1": {"type": "number"}}
+    },
+    "prisma": {
+      "type": "object", "required": ["forma", "poligono", "z0", "z1"],
+      "description": "Polígono em planta extrudado de z0 a z1.",
+      "properties": {"forma": {"const": "prisma"},
+        "poligono": {"type": "array", "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "minItems": 3},
+        "z0": {"type": "number"}, "z1": {"type": "number"}}
+    }
+  }
+}

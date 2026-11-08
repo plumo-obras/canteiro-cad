@@ -1,0 +1,14 @@
+services:
+  tradutor:
+    build: .
+    image: canteiro-cad:local
+    ports: ["8000:8000"]
+    environment:
+      TRADUTOR_WORKERS: "2"
+      TRADUTOR_API_KEYS: "${TRADUTOR_API_KEYS:-}"
+      TRADUTOR_WEBHOOK_SEGREDO: "${TRADUTOR_WEBHOOK_SEGREDO:-}"
+      TRADUTOR_CORS: "${TRADUTOR_CORS:-*}"
+    volumes: ["dados:/dados"]
+    restart: unless-stopped
+volumes:
+  dados:
