@@ -34,6 +34,7 @@ from canteiro_cad.dominio.erros import (
 from canteiro_cad.dominio.traducao import Status, Traducao
 from canteiro_cad.dominio.versao import VERSAO_CONTRATO, VERSAO_SERVICO
 from canteiro_cad.infraestrutura import baixar_sinapi
+from canteiro_cad.infraestrutura.catalogo_produtos import CatalogoProdutos
 from canteiro_cad.infraestrutura.catalogo_sinapi import CatalogoSinapi
 from canteiro_cad.infraestrutura.dxf import EspelhoDxf
 from canteiro_cad.infraestrutura.leitor import LeitorEmProcessos
@@ -93,7 +94,10 @@ def montar_tradutor(cfg: Configuracao) -> tuple[Tradutor, LeitorEmProcessos]:
         leitor,
         NotificadorHttp(cfg.segredo_webhook),
         EspelhoDxf(),
-        CatalogoSinapi(cfg.dados / "catalogo"),
+        # com o canteiro-products, a base vem de lá; sem ele, o catálogo local do SINAPI (o ZIP da Caixa)
+        CatalogoProdutos(cfg.produtos_url, cfg.produtos_chave)
+        if cfg.produtos_url
+        else CatalogoSinapi(cfg.dados / "catalogo"),
         max_bytes=cfg.max_bytes,
         retencao_horas=cfg.retencao_horas,
     )
@@ -115,7 +119,8 @@ def criar_app(cfg: Configuracao | None = None, tradutor: Tradutor | None = None)
 
         limpeza = asyncio.create_task(limpar_de_hora_em_hora())
         sinapi = None
-        if cfg.sinapi_auto and tradutor.catalogo is not None and tradutor.catalogo.referencia() is None:
+        local = isinstance(tradutor.catalogo, CatalogoSinapi)
+        if cfg.sinapi_auto and local and tradutor.catalogo.referencia() is None:
             # sem catálogo, a lista de materiais sai sem código nem preço: baixa em segundo plano, sem segurar a subida
             sinapi = asyncio.create_task(asyncio.to_thread(_baixar_sinapi_sem_derrubar, cfg))
         try:

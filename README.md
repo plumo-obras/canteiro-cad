@@ -35,6 +35,8 @@ chave (`TRADUTOR_CHAVE` lá = uma das `TRADUTOR_API_KEYS` aqui). O serviço não
 | `TRADUTOR_WEBHOOK_SEGREDO` | vazio | assina o callback (`X-Tradutor-Assinatura: sha256=…`) |
 | `TRADUTOR_DADOS` | `/dados` na imagem | onde ficam pranchas, resultados e o catálogo do SINAPI (volume) |
 | `TRADUTOR_SINAPI_AUTO` | 1 | sem catálogo do SINAPI, baixa o mês mais novo da Caixa ao subir |
+| `TRADUTOR_PRODUTOS_URL` | vazio | o [canteiro-products](https://github.com/plumo-obras/canteiro-products); com ele, o SINAPI vem de lá e o tradutor não baixa nada |
+| `TRADUTOR_PRODUTOS_CHAVE` | vazio | a chave do canteiro-products |
 
 ## Materiais do projeto e o SINAPI
 
@@ -46,8 +48,9 @@ centavos. O que o SINAPI não vende avulso (bloco de EPS de laje, vigota) fica s
 
 É o "precisa" da conta de compras: o que falta comprar é a API do Plumo que calcula (precisa − saldo − a caminho).
 
-O catálogo é o arquivo mensal da Caixa (`SINAPI-AAAA-MM-formato-xlsx.zip`, aba ISD). O serviço baixa sozinho ao subir
-quando não há catálogo; para trocar o mês:
+Com `TRADUTOR_PRODUTOS_URL`, o catálogo é o do **canteiro-products** (o serviço do Plumo com as bases oficiais de
+custos), com as mesmas regras de correspondência. Sem ele, o catálogo local é o arquivo mensal da Caixa
+(`SINAPI-AAAA-MM-formato-xlsx.zip`, aba ISD); o serviço baixa sozinho ao subir quando não há catálogo; para trocar o mês:
 
 ```bash
 uv run atualizar-sinapi                      # o mês mais novo publicado

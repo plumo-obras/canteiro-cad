@@ -30,6 +30,8 @@ class Configuracao:
     cors: list[str]
     segredo_webhook: bytes
     sinapi_auto: bool = True
+    produtos_url: str = ""
+    produtos_chave: str = ""
 
     @classmethod
     def do_ambiente(cls, env: dict[str, str] | None = None) -> Configuracao:
@@ -43,4 +45,6 @@ class Configuracao:
             cors=_lista(e.get("TRADUTOR_CORS", "*")),
             segredo_webhook=e.get("TRADUTOR_WEBHOOK_SEGREDO", "").encode(),
             sinapi_auto=e.get("TRADUTOR_SINAPI_AUTO", "1") != "0",
+            produtos_url=e.get("TRADUTOR_PRODUTOS_URL", ""),
+            produtos_chave=e.get("TRADUTOR_PRODUTOS_CHAVE", ""),
         )
