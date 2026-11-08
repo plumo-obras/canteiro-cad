@@ -12,14 +12,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_NO_CACHE=1 UV_COMPILE_BYTECO
     PATH=/srv/.venv/bin:$PATH \
     TRADUTOR_DADOS=/dados TRADUTOR_WORKERS=2
 WORKDIR /srv
-# Versões do uv.lock (--frozen): a imagem instala exatamente o que o CI testou. Dependências antes do código, para
-# mudança no src não reinstalar o motor inteiro.
+# Versões do uv.lock com --locked: lock desatualizado em relação ao pyproject quebra o build, em vez de instalar
+# calado a versão velha. A imagem instala exatamente o que o CI testou. Dependências antes do código, para mudança
+# no src não reinstalar o motor inteiro.
 COPY pyproject.toml uv.lock ./
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --locked --no-dev --no-install-project
 COPY src src
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
-    uv sync --frozen --no-dev --no-editable \
+    uv sync --locked --no-dev --no-editable \
  && useradd --create-home --uid 1000 tradutor && mkdir -p /dados && chown tradutor /dados
 # uid 1000 desde a 1.0: o volume /dados de quem já rodava o serviço continua gravável
 USER tradutor

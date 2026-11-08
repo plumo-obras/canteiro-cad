@@ -2,7 +2,7 @@
 Uso: uv run python ferramentas/avaliar.py exemplos/2.pdf resultado/2.json  (o JSON sai de identificar-pranchas)"""
 
 import json, re, sys
-import fitz
+import pymupdf as fitz
 
 
 def gabarito(pdf):

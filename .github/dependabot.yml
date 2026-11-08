@@ -18,8 +18,9 @@ updates:
       imagens-menor-e-patch:
         update-types: [minor, patch]
 
-  - package-ecosystem: pip
-    # requirements-servico.txt: o motor (OCR, PDF, DXF) e o serviço
+  - package-ecosystem: uv
+    # pyproject.toml + uv.lock juntos (com "pip" ele só mexia no pyproject, e o lock ficava com a versão velha).
+    # Bump do motor (OCR, PDF, DXF) só entra com a régua: tests/ponta_a_ponta e ferramentas/avaliar.py nos PDFs.
     directory: /
     schedule:
       interval: weekly
