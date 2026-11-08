@@ -21,14 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-      # as versões do uv.lock (--frozen): o CI testa exatamente o que a imagem instala
-      - run: uv sync --frozen --extra dev -p 3.11
+      # --locked: se o pyproject mudou e o uv.lock não (um bump que só mexeu no pyproject), o CI quebra aqui, em vez de
+      # testar a versão velha que continua no lock
+      - run: uv sync --locked --extra dev -p 3.11
       - name: lint e formatação
         run: |
-          uv run --frozen ruff check src tests ferramentas
-          uv run --frozen ruff format --check src tests
+          uv run --locked ruff check src tests ferramentas
+          uv run --locked ruff format --check src tests
       - name: testes (domínio, casos de uso, API, adaptadores e a regra das camadas)
-        run: uv run --frozen pytest -q
+        run: uv run --locked pytest -q
 
   imagem:
     runs-on: ubuntu-latest

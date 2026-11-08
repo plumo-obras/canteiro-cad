@@ -16,7 +16,7 @@ MIN_LINHAS = 30  # menos que isso = PDF escaneado / sem camada de texto
 
 
 def _matriz(page):
-    import fitz
+    import pymupdf as fitz
     e = DPI / 72
     # coordenadas do PDF -> orientação exibida (a página pode ter /Rotate) -> pixels da imagem
     return page.rotation_matrix * fitz.Matrix(e, e)
@@ -31,7 +31,7 @@ def renderizar(page, camadas_visiveis: set[int] | None = None):
 def ler_pdf(caminho: str | Path, pagina: int = 0, com_vetores: bool = False):
     """Retorna (tokens, imagem) — ou (tokens, imagem, vetores) com com_vetores=True.
     tokens = None se o PDF não tiver texto (escaneado)."""
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open(str(caminho))
     page = doc[pagina]

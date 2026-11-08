@@ -64,7 +64,7 @@ def categoria(camada: str | None, eh_texto: bool) -> str:
 
 
 def gerar(pdfs: list[Path], saida: Path, dpis: list[int], mascaras: bool):
-    import fitz
+    import pymupdf as fitz
 
     for sub in ("imagens", "mascaras", "rotulos"):
         (saida / sub).mkdir(parents=True, exist_ok=True)
