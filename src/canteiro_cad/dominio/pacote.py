@@ -247,8 +247,13 @@ def combinar(folhas: list[tuple[str, dict]]) -> dict:
                 for d in r2.get("detalhamentos", {}).get("Vigas", [])
                 for v in _expande(d["desenho"])
             }
+            if not det:
+                continue
             da_forma = [v["elemento"] for v in f["dados"]["vigas"]]
-            if not det or not da_forma:  # forma sem vigas lidas: "0/0 confere" seria uma conferência vazia
+            if not da_forma:  # sem vigas lidas na forma não há o que conferir: avisa em vez de "0/0 confere"
+                conferencias.append(
+                    {"ok": False, "texto": f"Vigas da forma {pav}: nenhuma viga lida na forma, não deu para conferir"}
+                )
                 continue
             sem = [v for v in da_forma if v not in det]
             conferencias.append(

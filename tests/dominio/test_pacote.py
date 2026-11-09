@@ -1,41 +1,29 @@
 from canteiro_cad.dominio.pacote import combinar
 
 
-def folha(arquivo, folha, **extra):
-    return {
-        "arquivo": arquivo,
-        "carimbo": {"folha": folha},
-        "classificacao": {"pavimento": "Térreo"},
-        "desenhos": [],
-        **extra,
-    }
+def folha(arquivo, numero, **extra):
+    base = {"arquivo": arquivo, "carimbo": {"folha": numero}, "classificacao": {"pavimento": "Térreo"}, "desenhos": []}
+    return {**base, **extra}
 
 
-def test_forma_sem_vigas_lidas_nao_gera_conferencia_vazia():
-    forma = folha(
-        "f.pdf",
-        "1",
-        desenhos=[{"tipo": "forma", "titulo": "FORMA DO PAVIMENTO TÉRREO", "dados": {"vigas": [], "lajes": []}}],
-    )
+def forma(*vigas):
+    dados = {"vigas": [{"elemento": v} for v in vigas], "lajes": []}
+    return folha("f.pdf", "1", desenhos=[{"tipo": "forma", "titulo": "FORMA DO PAVIMENTO TÉRREO", "dados": dados}])
+
+
+def conferencias_de_vigas(f):
     vigas = folha("v.pdf", "2", detalhamentos={"Vigas": [{"desenho": "V1"}]})
-    textos = [c["texto"] for c in combinar([("a", forma), ("b", vigas)])["conferencias"]]
-    assert not any(t.startswith("Vigas da forma") for t in textos)  # antes: "0/0", marcada como "confere"
+    return [c for c in combinar([("a", f), ("b", vigas)])["conferencias"] if c["texto"].startswith("Vigas da forma")]
+
+
+def test_forma_sem_vigas_lidas_avisa_em_vez_de_conferir_zero():
+    # antes: "Vigas da forma TÉRREO com armação detalhada: 0/0", marcada como confere
+    assert conferencias_de_vigas(forma()) == [
+        {"ok": False, "texto": "Vigas da forma TÉRREO: nenhuma viga lida na forma, não deu para conferir"}
+    ]
 
 
 def test_forma_com_vigas_continua_conferida():
-    forma = folha(
-        "f.pdf",
-        "1",
-        desenhos=[
-            {
-                "tipo": "forma",
-                "titulo": "FORMA DO PAVIMENTO TÉRREO",
-                "dados": {"vigas": [{"elemento": "V1"}, {"elemento": "V2"}], "lajes": []},
-            }
-        ],
-    )
-    vigas = folha("v.pdf", "2", detalhamentos={"Vigas": [{"desenho": "V1"}]})
-    conf = [
-        c for c in combinar([("a", forma), ("b", vigas)])["conferencias"] if c["texto"].startswith("Vigas da forma")
-    ]
-    assert conf == [{"ok": False, "texto": conf[0]["texto"]}] and "1/2" in conf[0]["texto"]
+    conf = conferencias_de_vigas(forma("V1", "V2"))
+    assert len(conf) == 1
+    assert conf[0]["ok"] is False and "1/2" in conf[0]["texto"]
