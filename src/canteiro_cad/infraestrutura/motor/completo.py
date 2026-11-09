@@ -642,6 +642,26 @@ LEITORES = {"locacao": ler_locacao, "forma": ler_forma, "corte": ler_corte,
             "armacao_lajes": ler_lajes, "vigotas": ler_vigotas}
 
 
+def _tem_conteudo(tipo, d):
+    """O que define cada tipo, para aceitá-lo sem o título dizer: locação tem eixos nas duas direções com a coordenada
+    escrita; forma tem vigas apoiadas em pilares; corte tem ao menos dois níveis diferentes (texto de escala não é
+    nível). Um rótulo solto não basta."""
+    if tipo == "locacao":
+        com_coord = lambda eixos: sum(1 for e in eixos if e.get("coord_cm") is not None)
+        return com_coord(d.get("eixos_letras", [])) >= 2 and com_coord(d.get("eixos_numerados", [])) >= 2
+    if tipo == "forma":
+        return len(d.get("vigas", [])) >= 2 and len(d.get("pilares", [])) >= 2
+    if tipo == "corte":
+        cotas = {n["cota_cm"] for n in d.get("niveis", []) if not RE_ESCALA.match(norm_txt(n["nivel"]))}
+        return len(cotas) >= 2
+    return True
+
+
+def norm_txt(s):
+    from .analisar import norm
+    return norm(s)
+
+
 def ler_regioes(regs, por_reg, uso, h):
     out = []
     for r in regs:
@@ -649,7 +669,10 @@ def ler_regioes(regs, por_reg, uso, h):
         if r["tipo"] in LEITORES:
             dados, usados = LEITORES[r["tipo"]](ts, h)
         else:  # tipo não reconhecido pelo título: testa todos os leitores e fica com o que mais estruturou
-            tentativas = [(len(u), tipo, d, u) for tipo, leitor in LEITORES.items() for d, u in [leitor(ts, h)]]
+            # só vale o tipo cujo leitor achou o que define aquele desenho; sem isso, um detalhe cheio de rótulos de
+            # pilar "vira" locação ou forma e o pacote pega essa folha como a locação do projeto
+            tentativas = [(len(u), tipo, d, u) for tipo, leitor in LEITORES.items()
+                          for d, u in [leitor(ts, h)] if _tem_conteudo(tipo, d)]
             n, tipo, dados, usados = max(tentativas, key=lambda x: x[0], default=(0, None, {}, set()))
             if n:
                 r["tipo"] = tipo
