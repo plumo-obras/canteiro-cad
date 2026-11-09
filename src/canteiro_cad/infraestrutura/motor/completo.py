@@ -642,6 +642,14 @@ LEITORES = {"locacao": ler_locacao, "forma": ler_forma, "corte": ler_corte,
             "armacao_lajes": ler_lajes, "vigotas": ler_vigotas}
 
 
+def _tem_conteudo(tipo, d):
+    if tipo == "forma":
+        return bool(d.get("vigas") or d.get("lajes"))
+    if tipo == "corte":
+        return bool(d.get("niveis"))
+    return True
+
+
 def ler_regioes(regs, por_reg, uso, h):
     out = []
     for r in regs:
@@ -649,7 +657,10 @@ def ler_regioes(regs, por_reg, uso, h):
         if r["tipo"] in LEITORES:
             dados, usados = LEITORES[r["tipo"]](ts, h)
         else:  # tipo não reconhecido pelo título: testa todos os leitores e fica com o que mais estruturou
-            tentativas = [(len(u), tipo, d, u) for tipo, leitor in LEITORES.items() for d, u in [leitor(ts, h)]]
+            # locação só pelo título; forma e corte só com o que os define (vigas/lajes, níveis). Sem isso, um
+            # detalhe com rótulos de pilar "vira" locação ou forma e o pacote pega essa folha como a locação
+            tentativas = [(len(u), tipo, d, u) for tipo, leitor in LEITORES.items() if tipo != "locacao"
+                          for d, u in [leitor(ts, h)] if _tem_conteudo(tipo, d)]
             n, tipo, dados, usados = max(tentativas, key=lambda x: x[0], default=(0, None, {}, set()))
             if n:
                 r["tipo"] = tipo
