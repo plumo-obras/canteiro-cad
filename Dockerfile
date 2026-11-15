@@ -4,7 +4,7 @@
 # Dependabot sobe tag e digest juntos. O uv é um estágio com nome porque o Dependabot só lê as linhas FROM.
 # Python 3.11: o onnxruntime e o rapidocr travados no pyproject ainda não têm roda para 3.13+.
 FROM ghcr.io/astral-sh/uv:0.13@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
-FROM python:3.11-slim@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 # libGL/glib: o opencv que o rapidocr puxa pede as bibliotecas de interface gráfica mesmo sem tela
 RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
